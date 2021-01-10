@@ -21,12 +21,12 @@ $ vault kv put secret/aws/s3 aws_access_key_id=somekeyid               # Create 
 $ curl -X PUT -H "Content-Type: application/json" -d '{"key":"****"}' \ 
  "http://192.168.0.111:8200/v1/sys/unseal"                             # Unseal
 # Nomad
-$ vagrant ssh node-1 -c "nomad server members -detailed"
-$ vagrant ssh node-1 -c "nomad node-status"
-$ vagrant ssh node-1 -c "nomad job run <path/to/jobspec.nomad>"
-$ vagrant ssh node-1 -c "nomad deployment list"
-$ vagrant ssh node-1 -c "nomad job status <Job_ID>"
-$ vagrant ssh node-1 -c "nomad job stop <Job_ID>"
+$ NOMAD_ADDR="http://192.168.122.111:4646" nomad server members -detailed
+$ nomad node-status
+$ nomad job run <path/to/jobspec.nomad>
+
+$ nomad job status <Job_ID>
+$ nomad job stop <Job_ID>"
 
 $ docker exec -i -t ansible_controller bash
 $ rsync -avz -e "ssh -i $HOME/.vagrant.d/insecure_private_key" \ 
@@ -65,6 +65,11 @@ $ rsync -avz -e "ssh -i $HOME/.vagrant.d/insecure_private_key" \
 | 1 | Find the Nomad job description | =/home/vagrant/example/APPNAME.nomad= |
 | 2 | Inside the Nomad server run the =levant= deployment script | =(vagrant@node-1):~/example$ bash ./deploy-dev.sh= |
 
+** Confirm services
+#+begin_src bash
+$ curl http://192.168.122.111/0/
+$ curl -H Host:vault.service.consul http://192.168.122.111/ui/
+#+end_src
 
 ** Environment teardown
 | # | Action               | Command     |

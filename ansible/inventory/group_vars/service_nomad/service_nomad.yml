@@ -1,6 +1,9 @@
 ---
 
-# VARIABLES TO EDIT
+# VARIABLES TO EDIT FOR DOCKER
+docker_users: ['vagrant']
+
+# VARIABLES TO EDIT FOR NOMAD
 nomad_datacenter: "lab"
 nomad_domain: "consul"
 nomad_iface: eth1

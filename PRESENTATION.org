@@ -1,0 +1,211 @@
+#+TITLE:     Local HashiStack Development 
+#+AUTHOR:    Olaf Marangone
+#+EMAIL:     olaf.marangone@amanox.ch
+#+DATE:      2021-04-23 Fri
+#+BEAMER_HEADER: \titlegraphic{\includegraphics[width=140,height=80]{./images/team_sessions_cover.png}}
+#+BEAMER_HEADER: \subtitle{Team Sessions}
+#+DESCRIPTION: 
+#+KEYWORDS: 
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:https://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+HTML_LINK_UP:
+#+HTML_LINK_HOME:
+#+startup: beamer
+#+latex_header: \mode<beamer>{\usetheme{Singapore}}
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [presentation]
+#+BEAMER_FRAME_LEVEL: 2
+#+COLUMNS: %45ITEM %10BEAMER_env(Env) %10BEAMER_act(Act) %4BEAMER_col(Col) %8BEAMER_opt(Opt)
+
+* Local HashiStack Development
+** Intro
+*** About Me
+**** Love for programming & architecture & start-ups :B_ignoreheading:BMCOL:
+:PROPERTIES:
+:BEAMER_env: block
+:BEAMER_col: 0.65
+:END:
+- Olaf Marangone
+- [[mailto:olmighty99@gmail.com][olmighty99@gmail.com]]
+- [[https://github.com/olmax99][https://github.com/olmax99]]
+
+**** Sicily 2021                                         :BMCOL:B_example:
+:PROPERTIES:
+:BEAMER_col: 0.35
+:BEAMER_env: example
+:END:
+#+ATTR_LATEX: width=100
+[[./images/me_sicily_2021.png]]
+
+*** Feel free to try for yourselves
+- [[https://github.com/amanoxsolution/team-sessions-local-hashistack][https://github.com/amanoxsolution/team-sessions-local-hashistack]]
+**** Find the original work here                                 :B_block:
+:PROPERTIES:
+:BEAMER_COL: 0.85
+:BEAMER_env: block
+:END:
+- Original work (GitHub): [[https://github.com/marco-lancini/offensive-infrastructure/tree/master/hashistack/part_2_hashistack][https://github.com/marco-lancini/offensive-infrastructure/tree/master/hashistack/part_2_hashistack]]
+- Original article: [[https://www.marcolancini.it/2019/blog-offensive-infrastructure-hashistack/][https://www.marcolancini.it/2019/blog-offensive-infrastructure-hashistack/]]
+
+*** Requirements                                                  :B_block:
+:PROPERTIES:
+:BEAMER_COL: 0.48
+:BEAMER_env: block
+:END:
+"Sorry!" Only tested for Linux!!
+- libvirt could be complemented with VirtualBox
+
+**** Thanks to Tux                                               :B_block:
+:PROPERTIES:
+:BEAMER_COL: 0.48
+:BEAMER_ACT: <2->
+:BEAMER_ENV: block
+:END:
+#+ATTR_LATEX: width=\textwidth
+[[./images/tux_is_the_man.png]]
+
+** Environment Setup
+*** Local Setup 
+#+begin_src
+$ vagrant up --provider=libvirt
+$ docker-compose up --build
+#+end_src
+**** Vagrant                                       :B_ignoreheading:BMCOL:
+:PROPERTIES:
+:BEAMER_env: block
+:BEAMER_col: 0.4
+:END:
+- *Vagrantfile* (Ruby) defines VM setup 
+- Install Go and Levant (think Helm or Ansible Jinja for Nomad)
+- Ansible controller runs from Docker
+**** Host and two Nodes                                  :BMCOL:B_example:
+:PROPERTIES:
+:BEAMER_col: 0.6
+:BEAMER_env: example
+:END:
+#+ATTR_LATEX: width=\textwidth
+[[./images/multi_node_setup.png]]
+
+*** Traefik (Before you start)
+- Traefik requires custom template (i.e. fork it, and modify)
+- Modify according to example
+- [[https://github.com/olmax99/ansible-traefik/commit/a2a7297a2bf3f71cae442e4f9e051db103ef0ef4][https://github.com/olmax99/ansible-traefik/commit/a2a7297a2bf3f71cae442e4f9e051db103ef0ef4]]
+
+#+begin_src 
+# Replace endpoints dynamically
+traefik_bind_ip --> {{ traefik_consul_master }}
+traefik_consul_master --> {{ traefik_consul_master }}
+#+end_src
+- [[https://github.com/olmax99/ansible-traefik/blob/master/templates/traefik_v2.toml.j2][https://github.com/olmax99/ansible-traefik/blob/master/templates/traefik_v2.toml.j2]]
+
+*** Vagrant Network 
+- Depending on local network, ip entries may vary
+#+begin_src 
+$ vagrant ssh node-1 -c "sudo ifconfig"
+#+end_src
+
+**** Match local ip address entries                              :B_block:
+:PROPERTIES:
+:BEAMER_env: block
+:END:
+=ansible/inventory/hosts= 
+as well as 
+=../group_vars/service_traefik/service_traefik.yml=
+
+*** Ansible
+- Controller provided by Docker
+- SSH access enabled in =entrypoint.sh=
+- Loads Ansible =requirements.yml=
+#+begin_src
+- src: geerlingguy.docker
+- src: brianshumate.consul
+- src: brianshumate.vault
+- src: brianshumate.nomad
+- src: https://github.com/olmax99/ansible-traefik
+#+end_src
+
+*** Ansible-Galaxy
+- [[https://galaxy.ansible.com/brianshumate/consul][https://galaxy.ansible.com/brianshumate/consul]]
+- [[https://galaxy.ansible.com/brianshumate/vault][https://galaxy.ansible.com/brianshumate/vault]]
+- [[https://galaxy.ansible.com/brianshumate/nomad][https://galaxy.ansible.com/brianshumate/nomad]]
+
+**** Thanks to Bryan                                             :B_block:
+:PROPERTIES:
+:BEAMER_COL: 0.48
+:BEAMER_ACT: <2->
+:BEAMER_ENV: block
+:END:
+- Everything moved to [[https://github.com/ansible-community][https://github.com/ansible-community]] now
+
+
+** Stack Deployment
+*** Stack
+**** HashiStack                                    :B_ignoreheading:BMCOL:
+:PROPERTIES:
+:BEAMER_env: block
+:BEAMER_col: 0.5
+:END:
+1. Provides local DNS and health checks 
+2. Needs unsealing
+3. Docker cluster deployments
+4. Ingress (external, i.e. web app)
+
+**** Services                                      :B_ignoreheading:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.5
+:BEAMER_env: block
+:END:
+#+ATTR_LATEX: width=\textwidth
+[[./images/hashistack_overview.png]]
+
+*** Running
+**** Consul & Nomad                                :B_ignoreheading:BMCOL:
+:PROPERTIES:
+:BEAMER_env: block
+:BEAMER_col: 0.4
+:END:
+#+ATTR_LATEX: width=\textwidth
+[[./images/consul.png]]
+#+ATTR_LATEX: width=\textwidth
+[[./images/nomad.png]]
+
+**** Traefik                                       :B_ignoreheading:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.6
+:BEAMER_env: block
+:END:
+#+ATTR_LATEX: width=\textwidth
+[[./images/traefik.png]]
+
+
+** Conclusion
+*** But What Else Do I Really Need?
+- A lot of stuff not provided in this local setup.
+
+**** More Advanced Production Features                         :B_theorem:
+:PROPERTIES:
+:BEAMER_env: theorem
+:END:
+- Automated Vault unsealing
+- Encrypted Traffic
+- Admin Vpn access
+
+*** Questions??
+**** Thanks for your attention.                    :B_ignoreheading:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.5
+:BEAMER_env: block
+:END:
+- Good Luck! Have Fun..
+
+**** .                                             :B_ignoreheading:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.5
+:BEAMER_env: block
+:END:
+#+ATTR_LATEX: width=\textwidth
+[[./images/theoffice_k8s.png]]

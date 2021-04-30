@@ -1,0 +1,274 @@
+% Intended LaTeX compiler: pdflatex
+\documentclass[presentation]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\mode<beamer>{\usetheme{Singapore}}
+\usetheme{default}
+\author{Olaf Marangone\thanks{olaf.marangone@amanox.ch}}
+\date{}
+\title{Local HashiStack Development}
+\titlegraphic{\includegraphics[width=140,height=80]{./images/team_sessions_cover.png}}
+\subtitle{Team Sessions}
+\hypersetup{
+ pdfauthor={Olaf Marangone},
+ pdftitle={Local HashiStack Development},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 26.1 (Org mode 9.3.6)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+
+\section{Local HashiStack Development}
+\label{sec:org063893e}
+\subsection{Intro}
+\label{sec:orgc314757}
+\begin{frame}[label={sec:org4dd0353}]{About Me}
+\begin{columns}
+\begin{column}{0.65\columnwidth}
+\begin{block}{Love for programming \& architecture \& start-ups}
+\begin{itemize}
+\item Olaf Marangone
+\item \href{mailto:olmighty99@gmail.com}{olmighty99@gmail.com}
+\item \href{https://github.com/olmax99}{https://github.com/olmax99}
+\end{itemize}
+\end{block}
+\end{column}
+
+\begin{column}{0.35\columnwidth}
+\begin{example}[Sicily 2021]
+\begin{center}
+\includegraphics[width=.9\linewidth]{./images/me_sicily_2021.png}
+\end{center}
+\end{example}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[label={sec:org239bbf6}]{Feel free to try for yourselves}
+\begin{itemize}
+\item \href{https://github.com/amanoxsolution/team-sessions-local-hashistack}{https://github.com/amanoxsolution/team-sessions-local-hashistack}
+\end{itemize}
+\begin{columns}
+\begin{column}{0.85\columnwidth}
+\begin{block}{Find the original work here}
+\begin{itemize}
+\item Original work (GitHub): \href{https://github.com/marco-lancini/offensive-infrastructure/tree/master/hashistack/part\_2\_hashistack}{https://github.com/marco-lancini/offensive-infrastructure/tree/master/hashistack/part\textsubscript{2}\textsubscript{hashistack}}
+\item Original article: \href{https://www.marcolancini.it/2019/blog-offensive-infrastructure-hashistack/}{https://www.marcolancini.it/2019/blog-offensive-infrastructure-hashistack/}
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[label={sec:orgef89989}]{Requirements}
+"Sorry!" Only tested for Linux!!
+\begin{itemize}
+\item libvirt could be complemented with VirtualBox
+\end{itemize}
+
+\begin{columns}
+\begin{column}{0.48\columnwidth}
+\begin{block}<2->{Thanks to Tux}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./images/tux_is_the_man.png}
+\end{center}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+\subsection{Environment Setup}
+\label{sec:org786c7ef}
+\begin{frame}[label={sec:org139def7},fragile]{Local Setup}
+ \begin{verbatim}
+$ vagrant up --provider=libvirt
+$ docker-compose up --build
+\end{verbatim}
+\begin{columns}
+\begin{column}{0.4\columnwidth}
+\begin{block}{Vagrant}
+\begin{itemize}
+\item \alert{Vagrantfile} (Ruby) defines VM setup
+\item Install Go and Levant (think Helm or Ansible Jinja for Nomad)
+\item Ansible controller runs from Docker
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.6\columnwidth}
+\begin{example}[Host and two Nodes]
+\begin{center}
+\includegraphics[width=.9\linewidth]{./images/multi_node_setup.png}
+\end{center}
+\end{example}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[label={sec:org19f2716},fragile]{Traefik (Before you start)}
+ \begin{itemize}
+\item Traefik requires custom template (i.e. fork it, and modify)
+\item Modify according to example
+\item \href{https://github.com/olmax99/ansible-traefik/commit/a2a7297a2bf3f71cae442e4f9e051db103ef0ef4}{https://github.com/olmax99/ansible-traefik/commit/a2a7297a2bf3f71cae442e4f9e051db103ef0ef4}
+\end{itemize}
+
+\begin{verbatim}
+# Replace endpoints dynamically
+traefik_bind_ip --> {{ traefik_consul_master }}
+traefik_consul_master --> {{ traefik_consul_master }}
+\end{verbatim}
+\begin{itemize}
+\item \href{https://github.com/olmax99/ansible-traefik/blob/master/templates/traefik\_v2.toml.j2}{https://github.com/olmax99/ansible-traefik/blob/master/templates/traefik\textsubscript{v2.toml.j2}}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:orge44b35f},fragile]{Vagrant Network}
+ \begin{itemize}
+\item Depending on local network, ip entries may vary
+\end{itemize}
+\begin{verbatim}
+$ vagrant ssh node-1 -c "sudo ifconfig"
+\end{verbatim}
+
+\begin{block}{Match local ip address entries}
+\texttt{ansible/inventory/hosts} 
+as well as 
+\texttt{../group\_vars/service\_traefik/service\_traefik.yml}
+\end{block}
+\end{frame}
+
+\begin{frame}[label={sec:orge3bee89},fragile]{Ansible}
+ \begin{itemize}
+\item Controller provided by Docker
+\item SSH access enabled in \texttt{entrypoint.sh}
+\item Loads Ansible \texttt{requirements.yml}
+\end{itemize}
+\begin{verbatim}
+- src: geerlingguy.docker
+- src: brianshumate.consul
+- src: brianshumate.vault
+- src: brianshumate.nomad
+- src: https://github.com/olmax99/ansible-traefik
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[label={sec:org9c76e81}]{Ansible-Galaxy}
+\begin{itemize}
+\item \href{https://galaxy.ansible.com/brianshumate/consul}{https://galaxy.ansible.com/brianshumate/consul}
+\item \href{https://galaxy.ansible.com/brianshumate/vault}{https://galaxy.ansible.com/brianshumate/vault}
+\item \href{https://galaxy.ansible.com/brianshumate/nomad}{https://galaxy.ansible.com/brianshumate/nomad}
+\end{itemize}
+
+\begin{columns}
+\begin{column}{0.48\columnwidth}
+\begin{block}<2->{Thanks to Bryan}
+\begin{itemize}
+\item Everything moved to \href{https://github.com/ansible-community}{https://github.com/ansible-community} now
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+
+\subsection{Stack Deployment}
+\label{sec:org6697a0d}
+\begin{frame}[label={sec:org2e7e8eb}]{Stack}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\begin{block}{HashiStack}
+\begin{enumerate}
+\item Provides local DNS and health checks
+\item Needs unsealing
+\item Docker cluster deployments
+\item Ingress (external, i.e. web app)
+\end{enumerate}
+\end{block}
+\end{column}
+
+\begin{column}{0.5\columnwidth}
+\begin{block}{Services}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./images/hashistack_overview.png}
+\end{center}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[label={sec:orgdb5d0a1}]{Running}
+\begin{columns}
+\begin{column}{0.4\columnwidth}
+\begin{block}{Consul \& Nomad}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./images/consul.png}
+\end{center}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./images/nomad.png}
+\end{center}
+\end{block}
+\end{column}
+
+\begin{column}{0.6\columnwidth}
+\begin{block}{Traefik}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./images/traefik.png}
+\end{center}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+
+\subsection{Conclusion}
+\label{sec:org4c66633}
+\begin{frame}[label={sec:org8a1b853}]{But What Else Do I Really Need?}
+\begin{itemize}
+\item A lot of stuff not provided in this local setup.
+\end{itemize}
+
+\begin{theorem}[More Advanced Production Features]
+\begin{itemize}
+\item Automated Vault unsealing
+\item Encrypted Traffic
+\item Admin Vpn access
+\end{itemize}
+\end{theorem}
+\end{frame}
+
+\begin{frame}[label={sec:org187fd7d}]{Questions??}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\begin{block}{Thanks for your attention.}
+\begin{itemize}
+\item Good Luck! Have Fun..
+\end{itemize}
+\end{block}
+\end{column}
+
+\begin{column}{0.5\columnwidth}
+\begin{block}{.}
+\begin{center}
+\includegraphics[width=.9\linewidth]{./images/theoffice_k8s.png}
+\end{center}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+\end{document}

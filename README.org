@@ -1,4 +1,4 @@
-#+TITLE: nomad-cluster-trial-1
+#+TITLE: Nomad Local Development
 #+SETUPFILE: ~/s3olmax/org/conf/setup.config
 #+FILETAGS: :nomad:iac:ansible:vault:consul:vagrant
 
@@ -11,6 +11,7 @@ Set up and manage a local Nomad Cluster using Consul, Vault, Traefik and Vagrant
 * Useful Commands
 #+begin_src bash
 $ vagrant up --provider=libvirt
+$ vagrant ssh node-1 -c "sudo ifconfig"
 
 # Consul
 $ vagrant ssh node-1 -c "consul catalog nodes"
@@ -47,7 +48,7 @@ $ rsync -avz -e "ssh -i $HOME/.vagrant.d/insecure_private_key" \
 
 ** 2. Stack Deployment
 | # | Action               | Command     |
-| 1 | Change the IP addresses of the =hosts= file accordingly with what you set in the =Vagrantfile= | =$ cat /ansible/inventory/hosts= |
+| 1 | Change the IP addresses of the =hosts= file accordingly with what you set in the =Vagrantfile= and local network | =$ vagrant ssh node-1 -c "sudo ifconfig"= |
 | 3 | Run the individual playbooks a first time (use any password as Vault password) to deploy Consul+Dnsmasq, and Vault | =(ansible_controller) ~$ ansible-playbook ansible/consul.yml + vault.yml= |
 | 4 | Unseal Vault: head to http://192.168.0.111:8200/ and follow the process (remember to store the master key and the root token) | http://192.168.0.111:8200/ |
 | 5 | Provide a Vault token to Nomad (remember to store the new password) | In 'General Instructions' follow the 'Integrate Ansible-Vault' section and insert encrypted token into =ansible/inventory/group_vars/service_nomad.yml= |
@@ -118,9 +119,6 @@ $ sudo virsh net-edit vagrant-libvirt
 $ sudo virsh net-destroy vagrant-libvirt
   #+end_src
   
-
-
-
 * Author
 
 Olaf Marangone
